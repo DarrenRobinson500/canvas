@@ -1,0 +1,30 @@
+{% extends 'base.html'%}
+{% block content %}
+ind.html
+<div class='card'>
+    <div class='card-header'>
+    <b>{{item.name}}</b>
+</div>
+<div class='card-body'>
+<a href='{% url 'update' type item.id %}'>Edit</a>
+<h5 class='card-title'>Base Information</h5>
+<p class='card-text'>
+<ul>
+    <li> Name: {{ item.name }}  </li>
+    <li> Description: {{ item.description }}  </li>
+    <li> Parent: {{ item.parent.name }}  </li>
+</ul>
+</p>
+</div>
+<div class='card-body'>
+<h5 class='card-title'>Linked Processes (Children)</h5>
+<p class='card-text'>
+<ul>
+    {% for process in processes %}
+    <li> {{ process.name }}  </li>
+    {% endfor %}
+</ul>
+</p>
+</div>
+
+{% endblock %}

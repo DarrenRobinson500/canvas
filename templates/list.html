@@ -1,0 +1,33 @@
+{% extends 'base.html'%}
+{% block content %}
+
+<a href="{% url 'new' type %}" class='btn btn-outline-secondary btn-sm'>New</a>
+
+
+<h1>{{header}}</h1>
+<table class='table table-striped table-hover table-bordered'>
+    <tr style="background-color: #AC97CC;">
+        <th>Name</th>
+        <th>Description</th>
+        <th>Level</th>
+        <th>Map</th>
+        <th>View</th>
+        <th>Update</th>
+        <th>Delete</th>
+    </tr>
+
+    {% for item in list %}
+    <tr>
+        <td> {{item.name }} </td>
+        <td> {{item.description }} </td>
+        <td> {{item.level }} </td>
+        <td><a href='{% url 'map' type item.id %}' class='btn btn-outline-secondary btn-sm'> Map </a></td>
+        <td><a href='{% url 'ind' type item.id %}' class='btn btn-outline-secondary btn-sm'> View </a></td>
+        <td><a href='{% url 'update' type item.id %}' class='btn btn-outline-secondary btn-sm'> Update </a></td>
+        <td><a href='{% url 'delete' type item.id %}' class='btn btn-outline-secondary btn-sm'> Delete </a></td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br><br>
+{% endblock %}

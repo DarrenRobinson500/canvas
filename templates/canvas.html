@@ -1,0 +1,131 @@
+{% extends 'base.html'%}
+{% block content %}
+
+<p id="Message">Description</p>
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width= window.innerWidth+250;
+canvas.height = innerHeight-100;
+canvas.style.background = "#F0F0F0";
+ctx.beginPath();
+ctx.rect(0, 0, canvas.width, canvas.height);
+ctx.strokeStyle = "#C8C8C8"
+ctx.stroke();
+
+function handle_submit_click() {
+    console.log("Button pressed");
+    const description = document.getElementById("description").value;
+    console.log(description);
+
+    }
+
+class Node{
+    constructor(x,y,w,h,text, description, c, colour_text,highlight, highlight_b, parent) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.text = text;
+        if (description === null) {description = "Null description"}
+        this.description = description;
+        this.c = c;
+        this.colour_text = colour_text;
+        this.highlight = highlight;
+        this.highlight_b = highlight_b;
+        this.parent = parent;
+    }
+    draw(ctx){
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.h/2,Math.PI/2,-Math.PI/2);
+        ctx.lineTo(this.x+this.w,this.y-this.h/2);
+        ctx.arc(this.x+this.w,this.y,this.h/2,-Math.PI/2,Math.PI/2);
+        ctx.closePath();
+        ctx.strokeStyle = this.c;
+        if (this.highlight) {ctx.fillStyle = "red";}
+        if (this.highlight_b) {}
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "black";
+        ctx.font = '14px arial';
+        ctx.fillText(this.text,this.x,this.y+this.h*.18);
+    }
+
+    clickNode(xmouse, ymouse) {
+        if (xmouse > this.x - this.h/2 && xmouse < this.x + this.w + this.h/2
+         && ymouse > this.y - this.h / 2 && ymouse < this.y + this.h / 2){
+            this.highlight = true;
+            this.draw(ctx);
+            document.getElementById("Message").innerHTML = this.description + " ";
+            return true;
+        } else {
+            this.highlight_b = false;
+            if (this.highlight) {this.highlight = false; this.highlight_b = true;}
+            this.highlight = false;
+            this.draw(ctx)
+            return false;
+        }
+    }
+}
+
+class Connection {
+    constructor(child, parent, highlight) {
+        this.child = child
+        this.parent = parent
+        this.highlight = highlight}
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.moveTo(this.parent.x+this.parent.w,this.parent.y);
+        ctx.lineTo(this.child.x,this.child.y);
+        ctx.strokeStyle = this.parent.c;
+        ctx.fill();
+        ctx.closePath();
+        ctx.stroke();}
+}
+
+
+canvas.addEventListener('click',(event) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    document.getElementById("Message").innerHTML = "No description";
+    for (let i = 0; i < nodes_js.length; i++) {
+        nodes_js[i].clickNode(x,y);
+    }
+
+});
+
+// create js nodes and connections
+const nodes_js = []
+{% for node in nodes %}
+    {% if node.level <= 3 %} var colour = "green" {% else %} var colour = "blue" {% endif %}
+    var node = new Node({{node.x}},{{node.y}},100,30, "{{node.text}}", "{{node.description}}", colour, "white", false, false, )
+    nodes_js.push(node);
+{% endfor %}
+
+const connections_js = []
+{% for connection in connections %}
+    for (let i = 0; i < nodes_js.length; i++) {
+        if (nodes_js[i].text == "{{connection.a}}") {child = nodes_js[i];}
+        if (nodes_js[i].text == "{{connection.b}}") {parent = nodes_js[i];}
+    }
+    var connection = new Connection(child, parent, false);
+    connections_js.push(connection);
+{% endfor %}
+
+for (let i = 0; i < connections_js.length; i++) {
+    connections_js[i].draw(ctx);
+}
+for (let i = 0; i < nodes_js.length; i++) {
+    nodes_js[i].draw(ctx);
+}
+
+
+
+</script>
+
+{% endblock %}
