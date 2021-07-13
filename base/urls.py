@@ -16,6 +16,12 @@ urlpatterns = [
     path('ind/<type>/<id>', views.ind, name='ind'),
     path('delete/<type>/<id>', views.delete, name='delete'),
     path('update/<type>/<id>', views.update, name='update'),
+
+    path('files/', views.files, name='files'),
+    path('upload/', views.upload, name='upload'),
+    path('load/<type>/<id>/', views.load, name='load'),
+    path('file_delete/<id>/', views.file_delete, name='file_delete'),
+
 ]
 
 urlpatterns += static(settings.STATIC_URL,document_root=settings.STATIC_ROOT)

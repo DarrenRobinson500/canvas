@@ -1,13 +1,18 @@
 from django.shortcuts import render, redirect
-from .models import BusObj, Process, Node, Connection
-from .forms import BusObjForm, ProcessForm
+from .models import Db, Connection, File
+from .forms import BaseForm, FileForm
+import openpyxl as xl
 
 X_SPACE = 160
-Y_SPACE = 50
+Y_SPACE = 70
+current_y = 0
 
-full_name = {"busobj": "Business Objective", "process": "Process"}
-full_name_p = {"busobj": "Business Objectives", "process": "Processes"}
-ind_file = {"busobj": "ind", "process": "ind"}
+full_name = {"role": "Role", "busobj": "Business Objective", "obligation": "Obligation", "theme": "Theme",
+             "process": "Process", "risk": "Risk", "metric": "Metric", "control": "Control", "issue": "Issue", }
+full_name_p = {"role": "Roles", "busobj": "Business Objectives", "obligation": "Obligations", "theme": "Themes",
+             "process": "Processes", "risk": "Risks", "metric": "Metrics", "control": "Controls", "issue": "Issues", }
+ind_template = {"role": "ind", "busobj": "ind", "obligation": "ind", "theme": "ind",
+             "process": "ind", "risk": "ind", "metric": "ind", "control": "ind", "issue": "ind", }
 
 def home(request):
     header = "Business Objectives"
@@ -16,126 +21,87 @@ def home(request):
     link_desc = "New Business Objective"
     return render(request, 'home.html', {'header': header, 'comment': comment, 'link': link, 'link_desc': link_desc})
 
-def add_child(child,node):
-    new_node = Node(level=child.level, text=child.name, description=child.description)
-    new_node.save()
-    new_node.parent.add(node)
-    if child.level <= 3:
-        new_node.busobj = child
-    elif child.level <= 6:
-        new_node.process = child
-    new_node.save()
-    if child.level <= 5:
-        add_children(new_node, new_node.level + 1)
+def set_loc_layer(type):
+    global current_y
+    for level in range(1, 7):
+        this_row = Db.objects.filter(type=type, level=level)
+        print(type, level, this_row.count(), current_y)
+        if this_row.count() > 0:
+            current_x = int(20 + X_SPACE * 3 - (min(this_row.count(),7) - 1) / 2 * X_SPACE)
+            for item in this_row:
+                item.y = current_y
+                item.x = current_x
+                print("Save:", item, "X: ", item.x, "Y:", item.y)
+                item.save()
+                current_x += X_SPACE
+                if current_x >= X_SPACE * 7:
+                    current_x = int(20)
+                    current_y += Y_SPACE / 2
 
-def add_children(node, level):
-    if level <= 3:
-        item = node.busobj
-    elif level <= 6:
-        item = node.process
-    if item is not None:
-        children = BusObj.objects.filter(parent__id=item.id).filter(level__gte=level)
-        for child in children: add_child(child, node)
+            current_y += Y_SPACE
+            print("added_y")
 
-        children = Process.objects.filter(parent__id=item.id).filter(level__gte=level)
-        print(node, children, Process.objects.filter(parent__id=item.id), level)
-        for child in children:
-            add_child(child, node)
-
-        if level <= 3:
-            children = item.process_set.all()
-            for child in children: add_child(child, node)
-
-        children_nodes = Node.objects.filter(parent=node)
-        count = 0
-        for child_node in children_nodes:
-            child_node.y = int(-(children_nodes.count()-1)/2 * Y_SPACE + count * Y_SPACE)
-            child_node.x = X_SPACE
-            child_node.save()
-            new_connection = Connection(a=child_node, b=node)
-            new_connection.save()
-            count += 1
-
-def add_children_loc():
-    for x in range(2,7):
-        nodes = Node.objects.filter(level=x)
-        for node in nodes:
-            if node.parent.all().count() == 0:
-                node.y= 250
-            else:
-                parent = node.parent.all()[0]
-                node.y = parent.y + node.y
-            node.x = (node.level - 1) * X_SPACE + 30
-            node.save()
+def set_locations():
+    global current_y
+    current_y = 50
+    set_loc_layer("role")
+    set_loc_layer("busobj")
+    set_loc_layer("obligation")
+    set_loc_layer("theme")
+    set_loc_layer("process")
+    set_loc_layer("risk")
+    set_loc_layer("metric")
+    set_loc_layer("control")
+    set_loc_layer("issue")
 
 def map(request, type, id):
-    nodes = Node.objects.all()
-    nodes.delete()
-    connections = Node.objects.all()
-    connections.delete()
-    new_node = Node()
-    if type == "busobj":
-        item = BusObj.objects.filter(id=id)[0]
-        new_node.busobj = item
-    elif type == "process":
-        item = Process.objects.filter(id=id)[0]
-        new_node.process = item
-    new_node.level = item.level
-    new_node.x = (item.level - 1) * X_SPACE + 30
-    new_node.y = 250
-    new_node.text =item.name
-    new_node.description =item.description
-    new_node.save()
-    add_children(new_node,item.level)
-    add_children_loc()
-    nodes = Node.objects.all()
+    Connection.objects.all().delete()
+    db = Db.objects.all()
+    for item in db:
+        item.save()
+        for item2 in item.links.all():
+            if item.level <= item2.level:
+                new = Connection(a=item, b=item2)
+                new.save()
     connections = Connection.objects.all()
-    return render(request, 'canvas.html', {'nodes': nodes, 'connections':connections})
+    set_locations()
+
+    return render(request, 'canvas.html', {'nodes': db, 'connections':connections})
 
 def ind(request, type, id):
-    link = ind_file[type] + ".html"
-    if type == "busobj":
-        item = BusObj.objects.get(pk=id)
-    if type == "process":
-        item = Process.objects.get(pk=id)
-        processes = Process.objects.filter(parent=item)
-    else:
-        processes = item.process_set.all()
-    return render(request, link, {'item': item, 'type': type, 'processes':processes})
+    template = ind_template[type] + ".html"
+    item = Db.objects.get(pk=id)
+    processes = item.links.all().filter(type="process")
+    return render(request, template, {'item': item, 'type': type, 'processes':processes})
 
 def list(request,type):
     header = full_name_p[type]
     new_link = type + "_new"
-    if type == "busobj":
-        list = BusObj.objects.all()
-    if type == "process":
-        list = Process.objects.all()
+    list = Db.objects.filter(type=type)
     return render(request, 'list.html', {'header': header, 'type': type, 'new_link': new_link, 'list': list})
 
 def new(request, type):
     header = "New " + full_name[type]
     if request.method == 'POST':
-        if type == "busobj":
-            form = BusObjForm(request.POST)
-        if type == "process":
-            form = ProcessForm(request.POST)
+        form = BaseForm(request.POST)
+        # if type == "risk":
+        #     form = RiskForm(request.POST)
         if form.is_valid():
+            new = form.save()
+            new.type = type
             form.save()
             return redirect('/list/' + type)
     else:
-        if type == "busobj":
-            form = BusObjForm()
-        if type == "process":
-            form = ProcessForm()
+        form = BaseForm()
+        # if type == "risk":
+        #     form = RiskForm()
     return render(request, 'new.html', {'header': header, 'form': form})
 
 def update(request, type, id):
-    if type == "busobj":
-        item = BusObj.objects.get(pk=id)
-        form = BusObjForm(request.POST or None, instance=item)
-    if type == "process":
-        item = Process.objects.get(pk=id)
-        form = ProcessForm(request.POST or None, instance=item)
+    item = Db.objects.get(pk=id)
+    form = BaseForm(request.POST or None, instance=item)
+    if type == "risk":
+        form = RiskForm(request.POST or None, instance=item)
     if form.is_valid():
         form.save()
         return redirect('/list/' + type)
@@ -143,18 +109,72 @@ def update(request, type, id):
     return render(request, 'update.html', {'header': header,'item': item, 'form': form, 'type': type})
 
 def delete(request, type, id):
-    if type == "busobj":
-        item = BusObj.objects.get(pk=id)
-    if type == "process":
-        item = Process.objects.get(pk=id)
+    item = Db.objects.get(pk=id)
     item.delete()
     return redirect('/list/' + type)
 
+def upload(request):
+    if request.method == 'POST':
+        form = FileForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_file = form.save()
+            if new_file.name.find("Report") != -1:
+                new_file.type = "Report Template"
+            form.save()
+            return redirect('files')
+    else:
+        form = FileForm()
+    return render(request, 'upload.html',{'form':form})
+
+def load(request, type, id):
+    file = File.objects.filter(id=id)[0]
+    path = str(file.document.url)[1:]
+    messages = []
+    try:
+        wb = xl.load_workbook(path)
+    except:
+        header = full_name_p[type]
+        new_link = type + "_new"
+        list = Db.objects.filter(type=type)
+        message = f"Could not find {file} in {path}"
+        messages.append(message)
+        return render(request, 'list.html', {'header': header, 'type': type, 'new_link': new_link, 'list': list})
+
+    sheet = wb.active
+    for row in range(2, sheet.max_row + 1):
+        name=sheet.cell(row,1).value
+        role=sheet.cell(row,2).value
+        parent_role = sheet.cell(row,3).value
+        level = 1
+
+        if Db.objects.filter(name=parent_role).count() > 0:
+            parent_object = Db.objects.filter(name=parent_role)[0]
+            level = parent_object.level + 1
+        else:
+            parent_object = None
+            messages.append(f"No parent found for {name}")
+
+        if Db.objects.filter(name=role).count() == 0 and role is not None:
+            new_role = Db(name=role, incumbant=name, level=level, type=type)
+            new_role.save()
+            if parent_object is not None:
+                new_role.links.add(parent_object)
+            new_role.save()
+
+    return redirect('/list/' + type)
+
+def files(request):
+    list = File.objects.all().order_by('type')
+    return render(request, 'files.html', {'list': list})
+
+def file_delete(request, id):
+    if request.method == 'POST':
+        file = File.objects.get(pk=id)
+        file.delete()
+    return redirect('files')
 
 
 # TODO Show details of selected nodes
-# TODO Allow multiple children
-# TODO Allow multiple parents
 # TODO Add a join button
 # TODO Allow join selection (to edit strength or delete)
 # TODO change size to fit on page

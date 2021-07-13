@@ -8,7 +8,7 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 canvas.width= window.innerWidth+250;
-canvas.height = innerHeight-100;
+canvas.height = 2000;
 canvas.style.background = "#F0F0F0";
 ctx.beginPath();
 ctx.rect(0, 0, canvas.width, canvas.height);
@@ -36,6 +36,7 @@ class Node{
         this.highlight = highlight;
         this.highlight_b = highlight_b;
         this.parent = parent;
+        console.log(this.text, this.x, this.y);
     }
     draw(ctx){
         ctx.beginPath();
@@ -79,8 +80,8 @@ class Connection {
 
     draw(ctx) {
         ctx.beginPath();
-        ctx.moveTo(this.parent.x+this.parent.w,this.parent.y);
-        ctx.lineTo(this.child.x,this.child.y);
+        ctx.moveTo(this.parent.x+this.parent.w/2,this.parent.y);
+        ctx.lineTo(this.child.x+this.child.w/2,this.child.y);
         ctx.strokeStyle = this.parent.c;
         ctx.fill();
         ctx.closePath();
@@ -102,8 +103,9 @@ canvas.addEventListener('click',(event) => {
 // create js nodes and connections
 const nodes_js = []
 {% for node in nodes %}
-    {% if node.level <= 3 %} var colour = "green" {% else %} var colour = "blue" {% endif %}
-    var node = new Node({{node.x}},{{node.y}},100,30, "{{node.text}}", "{{node.description}}", colour, "white", false, false, )
+    var colour = "{{node.colour}}"
+    var node = new Node({{node.x}},{{node.y}},120,30, "{{node.name}}", "{{node.description}}", colour, "white", false, false, )
+    console.log("{{node.name}}")
     nodes_js.push(node);
 {% endfor %}
 

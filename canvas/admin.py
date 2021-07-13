@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import Process, Node, Connection
+from .models import Db, Node, Connection, File
 
-admin.site.register(Process)
+admin.site.register(Db)
 admin.site.register(Node)
 admin.site.register(Connection)
+admin.site.register(File)

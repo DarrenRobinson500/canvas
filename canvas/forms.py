@@ -1,27 +1,25 @@
 from django import forms
 from django.forms import ModelForm
-from .models import BusObj, Process
+from .models import Db, File
 
-class BusObjForm(ModelForm):
+class BaseForm(ModelForm):
     class Meta:
-        model = BusObj
-        fields = ('name', 'description', 'level', 'parent')
+        model = Db
+        fields = ('name', 'description', 'level', 'links')
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
             'description': forms.Textarea(attrs={'class':'form-control','rows':3}),
             'level': forms.Select(attrs={'class':'form-control'}),
-            'parent': forms.Select(attrs={'class':'form-control'}),
+            'links': forms.SelectMultiple(attrs={'class':'form-control'}),
         }
 
-class ProcessForm(ModelForm):
+class FileForm(ModelForm):
     class Meta:
-        model = Process
-        fields = ('name',  'description', 'level', 'busobj', 'parent', )
+        model = File
+        fields = ('name','type','document')
         widgets = {
-            'name': forms.TextInput(attrs={'class':'form-control'}),
-            'description': forms.Textarea(attrs={'class':'form-control','rows':3}),
-            'level': forms.Select(attrs={'class':'form-control'}),
-            'busobj': forms.SelectMultiple(attrs={'class':'form-control'}),
-            'parent': forms.SelectMultiple(attrs={'class': 'form-control'}),
+            'type': forms.Select(attrs={'class':'form-control'}),
+            'name': forms.TextInput(attrs={'class':'form-control','placeholder':''}),
+            'document': forms.FileInput(attrs={'class': 'form-control', 'placeholder': ''}),
         }
 
