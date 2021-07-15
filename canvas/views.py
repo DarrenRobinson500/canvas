@@ -2,24 +2,35 @@ from django.shortcuts import render, redirect
 from .models import Db, Connection, File
 from .forms import BaseForm, FileForm
 import openpyxl as xl
+from .constants import (
+    X_SPACE,
+    new_temp,
+    list_temp,
+    upload_temp,
+    Y_SPACE,
+    home_temp,
+    home_link,
+    home_comment,
+    home_header,
+    current_y,
+    full_name,
+    full_name_p,
+    ind_template,
+    canvas_temp,
+)
 
-X_SPACE = 160
-Y_SPACE = 70
-current_y = 0
-
-full_name = {"role": "Role", "busobj": "Business Objective", "obligation": "Obligation", "theme": "Theme",
-             "process": "Process", "risk": "Risk", "metric": "Metric", "control": "Control", "issue": "Issue", }
-full_name_p = {"role": "Roles", "busobj": "Business Objectives", "obligation": "Obligations", "theme": "Themes",
-             "process": "Processes", "risk": "Risks", "metric": "Metrics", "control": "Controls", "issue": "Issues", }
-ind_template = {"role": "ind", "busobj": "ind", "obligation": "ind", "theme": "ind",
-             "process": "ind", "risk": "ind", "metric": "ind", "control": "ind", "issue": "ind", }
 
 def home(request):
-    header = "Business Objectives"
-    comment = "You currently have no business objectives"
-    link = "busobj_new"
-    link_desc = "New Business Objective"
-    return render(request, 'home.html', {'header': header, 'comment': comment, 'link': link, 'link_desc': link_desc})
+    header = home_header
+    comment = home_comment
+    link = home_link
+    link_desc = home_link_desc
+    return render(
+        request,
+        home_temp,
+        {"header": header, "comment": comment, "link": link, "link_desc": link_desc},
+    )
+
 
 def set_loc_layer(type):
     global current_y
@@ -27,7 +38,9 @@ def set_loc_layer(type):
         this_row = Db.objects.filter(type=type, level=level)
         print(type, level, this_row.count(), current_y)
         if this_row.count() > 0:
-            current_x = int(20 + X_SPACE * 3 - (min(this_row.count(),7) - 1) / 2 * X_SPACE)
+            current_x = int(
+                20 + X_SPACE * 3 - (min(this_row.count(), 7) - 1) / 2 * X_SPACE
+            )
             for item in this_row:
                 item.y = current_y
                 item.x = current_x
@@ -40,6 +53,7 @@ def set_loc_layer(type):
 
             current_y += Y_SPACE
             print("added_y")
+
 
 def set_locations():
     global current_y
@@ -54,6 +68,7 @@ def set_locations():
     set_loc_layer("control")
     set_loc_layer("issue")
 
+
 def map(request, type, id):
     Connection.objects.all().delete()
     db = Db.objects.all()
@@ -66,23 +81,32 @@ def map(request, type, id):
     connections = Connection.objects.all()
     set_locations()
 
-    return render(request, 'canvas.html', {'nodes': db, 'connections':connections})
+    return render(request, canvas_temp, {"nodes": db, "connections": connections})
+
 
 def ind(request, type, id):
     template = ind_template[type] + ".html"
     item = Db.objects.get(pk=id)
     processes = item.links.all().filter(type="process")
-    return render(request, template, {'item': item, 'type': type, 'processes':processes})
+    return render(
+        request, template, {"item": item, "type": type, "processes": processes}
+    )
 
-def list(request,type):
+
+def list(request, type):
     header = full_name_p[type]
     new_link = type + "_new"
     list = Db.objects.filter(type=type)
-    return render(request, 'list.html', {'header': header, 'type': type, 'new_link': new_link, 'list': list})
+    return render(
+        request,
+        list_temp,
+        {"header": header, "type": type, "new_link": new_link, "list": list},
+    )
+
 
 def new(request, type):
     header = "New " + full_name[type]
-    if request.method == 'POST':
+    if request.method == "POST":
         form = BaseForm(request.POST)
         # if type == "risk":
         #     form = RiskForm(request.POST)
@@ -90,12 +114,13 @@ def new(request, type):
             new = form.save()
             new.type = type
             form.save()
-            return redirect('/list/' + type)
+            return redirect("/list/" + type)
     else:
         form = BaseForm()
         # if type == "risk":
         #     form = RiskForm()
-    return render(request, 'new.html', {'header': header, 'form': form})
+    return render(request, new_temp, {"header": header, "form": form})
+
 
 def update(request, type, id):
     item = Db.objects.get(pk=id)
@@ -104,27 +129,34 @@ def update(request, type, id):
         form = RiskForm(request.POST or None, instance=item)
     if form.is_valid():
         form.save()
-        return redirect('/list/' + type)
+        return redirect("/list/" + type)
     header = full_name[type] + ": " + item.name
-    return render(request, 'update.html', {'header': header,'item': item, 'form': form, 'type': type})
+    return render(
+        request,
+        upload_temp,
+        {"header": header, "item": item, "form": form, "type": type},
+    )
+
 
 def delete(request, type, id):
     item = Db.objects.get(pk=id)
     item.delete()
-    return redirect('/list/' + type)
+    return redirect("/list/" + type)
+
 
 def upload(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = FileForm(request.POST, request.FILES)
         if form.is_valid():
             new_file = form.save()
             if new_file.name.find("Report") != -1:
                 new_file.type = "Report Template"
             form.save()
-            return redirect('files')
+            return redirect("files")
     else:
         form = FileForm()
-    return render(request, 'upload.html',{'form':form})
+    return render(request, upload_temp, {"form": form})
+
 
 def load(request, type, id):
     file = File.objects.filter(id=id)[0]
@@ -138,13 +170,17 @@ def load(request, type, id):
         list = Db.objects.filter(type=type)
         message = f"Could not find {file} in {path}"
         messages.append(message)
-        return render(request, 'list.html', {'header': header, 'type': type, 'new_link': new_link, 'list': list})
+        return render(
+            request,
+            list_temp,
+            {"header": header, "type": type, "new_link": new_link, "list": list},
+        )
 
     sheet = wb.active
     for row in range(2, sheet.max_row + 1):
-        name=sheet.cell(row,1).value
-        role=sheet.cell(row,2).value
-        parent_role = sheet.cell(row,3).value
+        name = sheet.cell(row, 1).value
+        role = sheet.cell(row, 2).value
+        parent_role = sheet.cell(row, 3).value
         level = 1
 
         if Db.objects.filter(name=parent_role).count() > 0:
@@ -161,17 +197,19 @@ def load(request, type, id):
                 new_role.links.add(parent_object)
             new_role.save()
 
-    return redirect('/list/' + type)
+    return redirect("/list/" + type)
+
 
 def files(request):
-    list = File.objects.all().order_by('type')
-    return render(request, 'files.html', {'list': list})
+    list = File.objects.all().order_by("type")
+    return render(request, "files.html", {"list": list})
+
 
 def file_delete(request, id):
-    if request.method == 'POST':
+    if request.method == "POST":
         file = File.objects.get(pk=id)
         file.delete()
-    return redirect('files')
+    return redirect("files")
 
 
 # TODO Show details of selected nodes
@@ -179,5 +217,3 @@ def file_delete(request, id):
 # TODO Allow join selection (to edit strength or delete)
 # TODO change size to fit on page
 # TODO allow user to start from one node
-
-

@@ -7,32 +7,56 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0015_alter_process_parent'),
+        ("canvas", "0015_alter_process_parent"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='node',
-            name='busobj',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='canvas.busobj'),
+            model_name="node",
+            name="busobj",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="canvas.busobj",
+            ),
         ),
         migrations.RemoveField(
-            model_name='node',
-            name='parent',
+            model_name="node",
+            name="parent",
         ),
         migrations.AddField(
-            model_name='node',
-            name='parent',
-            field=models.ManyToManyField(blank=True, related_name='_canvas_node_parent_+', to='canvas.Node'),
+            model_name="node",
+            name="parent",
+            field=models.ManyToManyField(
+                blank=True, related_name="_canvas_node_parent_+", to="canvas.Node"
+            ),
         ),
         migrations.AlterField(
-            model_name='node',
-            name='process',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='canvas.process'),
+            model_name="node",
+            name="process",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="canvas.process",
+            ),
         ),
         migrations.AlterField(
-            model_name='node',
-            name='type',
-            field=models.CharField(blank=True, choices=[('person', 'Person'), ('busobj', 'BusObj'), ('process', 'Process'), ('control', 'Control'), ('event', 'Event'), ('action', 'Action')], max_length=255, null=True),
+            model_name="node",
+            name="type",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("person", "Person"),
+                    ("busobj", "BusObj"),
+                    ("process", "Process"),
+                    ("control", "Control"),
+                    ("event", "Event"),
+                    ("action", "Action"),
+                ],
+                max_length=255,
+                null=True,
+            ),
         ),
     ]

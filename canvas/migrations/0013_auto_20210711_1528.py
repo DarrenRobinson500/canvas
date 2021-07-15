@@ -6,17 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0012_alter_process_busobj'),
+        ("canvas", "0012_alter_process_busobj"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='process',
-            name='parent',
+            model_name="process",
+            name="parent",
         ),
         migrations.AddField(
-            model_name='process',
-            name='parent',
-            field=models.ManyToManyField(blank=True, related_name='_canvas_process_parent_+', to='canvas.Process'),
+            model_name="process",
+            name="parent",
+            field=models.ManyToManyField(
+                blank=True, related_name="_canvas_process_parent_+", to="canvas.Process"
+            ),
         ),
     ]

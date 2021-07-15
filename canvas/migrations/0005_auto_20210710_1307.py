@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0004_connection'),
+        ("canvas", "0004_connection"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='process',
-            name='description',
+            model_name="process",
+            name="description",
             field=models.TextField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='process',
-            name='name',
+            model_name="process",
+            name="name",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

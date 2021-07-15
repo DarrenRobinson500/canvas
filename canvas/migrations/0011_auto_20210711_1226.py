@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0010_process_busobj'),
+        ("canvas", "0010_process_busobj"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='process',
-            name='busobj',
+            model_name="process",
+            name="busobj",
         ),
         migrations.AddField(
-            model_name='process',
-            name='busobj',
-            field=models.ManyToManyField(blank=True, null=True, to='canvas.BusObj'),
+            model_name="process",
+            name="busobj",
+            field=models.ManyToManyField(blank=True, null=True, to="canvas.BusObj"),
         ),
     ]

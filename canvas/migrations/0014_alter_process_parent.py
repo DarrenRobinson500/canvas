@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0013_auto_20210711_1528'),
+        ("canvas", "0013_auto_20210711_1528"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='process',
-            name='parent',
-            field=models.ManyToManyField(blank=True, to='canvas.Process'),
+            model_name="process",
+            name="parent",
+            field=models.ManyToManyField(blank=True, to="canvas.Process"),
         ),
     ]

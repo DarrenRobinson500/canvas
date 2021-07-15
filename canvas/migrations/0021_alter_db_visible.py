@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0020_db'),
+        ("canvas", "0020_db"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='db',
-            name='visible',
+            model_name="db",
+            name="visible",
             field=models.BooleanField(null=True),
         ),
     ]
