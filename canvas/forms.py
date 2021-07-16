@@ -1,6 +1,33 @@
 from django import forms
+from django.contrib.admin import widgets
+from django.contrib.admin.sites import site
 from django.forms import ModelForm
 from .models import Db, File
+
+# class BusObjWidget(widgets.ForeignKeyRawIdWidget):
+#     def url_parameters(self):
+#         result = super().url_parameters()
+#         result['type__exact'] = "busobj"
+#         return result
+#
+class BusObjForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.choices = Db.objects.filter(type="busobj")
+
+    class Meta:
+        model = Db
+        fields = ('links',)
+        labels = {'links': 'Add another business objective',}
+        widgets = {'links': forms.SelectMultiple(attrs={'class':'form-control'})}
+
+
+# class BusObjForm(ModelForm):
+#     class Meta:
+#         model = Db
+#         fields = ('links',)
+#         labels = {'links': 'Add another business objective',}
+#         widgets = {'links': forms.SelectMultiple(attrs={'class':'form-control'})}
 
 class BaseForm(ModelForm):
     class Meta:

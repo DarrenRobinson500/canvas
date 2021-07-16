@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .models import Db, Connection, File
-from .forms import BaseForm, FileForm
+from .forms import BaseForm, FileForm, BusObjForm
 import openpyxl as xl
 
 X_SPACE = 160
@@ -11,7 +11,7 @@ full_name = {"role": "Role", "busobj": "Business Objective", "obligation": "Obli
              "process": "Process", "risk": "Risk", "metric": "Metric", "control": "Control", "issue": "Issue", }
 full_name_p = {"role": "Roles", "busobj": "Business Objectives", "obligation": "Obligations", "theme": "Themes",
              "process": "Processes", "risk": "Risks", "metric": "Metrics", "control": "Controls", "issue": "Issues", }
-ind_template = {"role": "ind", "busobj": "ind", "obligation": "ind", "theme": "ind",
+ind_template = {"role": "ind_role", "busobj": "ind", "obligation": "ind", "theme": "ind",
              "process": "ind", "risk": "ind", "metric": "ind", "control": "ind", "issue": "ind", }
 
 def home(request):
@@ -19,19 +19,18 @@ def home(request):
     comment = "You currently have no business objectives"
     link = "busobj_new"
     link_desc = "New Business Objective"
+
     return render(request, 'home.html', {'header': header, 'comment': comment, 'link': link, 'link_desc': link_desc})
 
 def set_loc_layer(type):
     global current_y
     for level in range(1, 7):
         this_row = Db.objects.filter(type=type, level=level)
-        print(type, level, this_row.count(), current_y)
         if this_row.count() > 0:
             current_x = int(20 + X_SPACE * 3 - (min(this_row.count(),7) - 1) / 2 * X_SPACE)
             for item in this_row:
                 item.y = current_y
                 item.x = current_x
-                print("Save:", item, "X: ", item.x, "Y:", item.y)
                 item.save()
                 current_x += X_SPACE
                 if current_x >= X_SPACE * 7:
@@ -39,7 +38,6 @@ def set_loc_layer(type):
                     current_y += Y_SPACE / 2
 
             current_y += Y_SPACE
-            print("added_y")
 
 def set_locations():
     global current_y
@@ -57,11 +55,19 @@ def set_locations():
 def map(request, type, id):
     Connection.objects.all().delete()
     db = Db.objects.all()
+    db.update(visible=False)
+    first = Db.objects.get(id=id)
+    first.visible = True
+    first.save()
     for item in db:
-        item.save()
         for item2 in item.links.all():
             if item.level <= item2.level:
                 new = Connection(a=item, b=item2)
+                if item.visible:
+                    print(item, item2)
+                    item2.visible = True
+                    item2.save()
+                    new.visible = True
                 new.save()
     connections = Connection.objects.all()
     set_locations()
@@ -69,10 +75,57 @@ def map(request, type, id):
     return render(request, 'canvas.html', {'nodes': db, 'connections':connections})
 
 def ind(request, type, id):
+    messages=[]
     template = ind_template[type] + ".html"
     item = Db.objects.get(pk=id)
-    processes = item.links.all().filter(type="process")
-    return render(request, template, {'item': item, 'type': type, 'processes':processes})
+    objects = item.links.all()
+    owners = objects.filter(type="role")
+    busobjs = objects.filter(type="busobj")
+    processes = objects.filter(type="process")
+    risks = objects.filter(type="risks")
+    processes = processes.distinct()
+
+    busobj_form = BusObjForm(request.POST or None, instance=item)
+
+    if type == "role":
+        for x in busobjs:
+            processes = processes | x.links.all().filter(type="process")
+            risks = risks | x.links.all().filter(type="risk")
+            x.visible = True
+            x.save()
+        for x in processes:
+            risks = risks | x.links.all().filter(type="risk")
+            print(x, x.links.filter(type="risk"))
+
+        if busobj_form.is_valid():
+            busobj_form.save()
+        first = Db.objects.get(id=id)
+        if busobjs.count() == 0:
+            messages.append("You currently have no business objectives. Consider adding some.")
+        for busobj in busobjs:
+            item_processes = busobj.links.all().filter(type="process").count()
+            if item_processes == 0: messages.append(f"Your business objective '{busobj}' has no processes. Consider adding some.")
+
+        db = Db.objects.all()
+        db.update(visible=False)
+        first.x = 50
+        first.y = 50
+        first.save()
+
+    return render(request, template, {'item': item, 'type': type, 'owners': owners,'busobj_form':busobj_form,
+                                      'busobjs':busobjs, 'nodes': busobjs, 'processes':processes,'risks':risks,
+                                      'messages':messages})
+
+def update(request, type, id):
+    item = Db.objects.get(pk=id)
+    form = BaseForm(request.POST or None, instance=item)
+    # if type == "risk":
+    #     form = RiskForm(request.POST or None, instance=item)
+    if form.is_valid():
+        form.save()
+        return redirect('/list/' + type)
+    header = full_name[type] + ": " + item.name
+    return render(request, 'update.html', {'header': header,'item': item, 'form': form, 'type': type})
 
 def list(request,type):
     header = full_name_p[type]
@@ -97,16 +150,6 @@ def new(request, type):
         #     form = RiskForm()
     return render(request, 'new.html', {'header': header, 'form': form})
 
-def update(request, type, id):
-    item = Db.objects.get(pk=id)
-    form = BaseForm(request.POST or None, instance=item)
-    if type == "risk":
-        form = RiskForm(request.POST or None, instance=item)
-    if form.is_valid():
-        form.save()
-        return redirect('/list/' + type)
-    header = full_name[type] + ": " + item.name
-    return render(request, 'update.html', {'header': header,'item': item, 'form': form, 'type': type})
 
 def delete(request, type, id):
     item = Db.objects.get(pk=id)

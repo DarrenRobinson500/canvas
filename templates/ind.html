@@ -3,7 +3,7 @@
 
 <div class='card'>
     <div class='card-header'>
-    <b>{{item.name}}</b>
+    <b>{{item.name}} ({{item.type}})</b>
 </div>
 <div class='card-body'>
 <a href='{% url 'update' type item.id %}'>Edit</a>
@@ -17,14 +17,46 @@
 </p>
 </div>
 <div class='card-body'>
-<h5 class='card-title'>Linked Processes</h5>
+<h5 class='card-title'>Owners</h5>
 <p class='card-text'>
 <ul>
-    {% for process in processes %}
-    <li> {{ process.name }}  </li>
+    {% for item in owners %}
+    <li> <a href='{% url 'ind' 'role' item.id %}'>{{item}}</a>  </li>
     {% endfor %}
 </ul>
 </p>
 </div>
+<div class='card-body'>
+<h5 class='card-title'>Linked Business Objectives</h5>
+<p class='card-text'>
+<ul>
+    {% for item in busobjs %}
+    <li> <a href='{% url 'ind' 'busobj' item.id %}'>{{item}}</a>   </li>
+    {% endfor %}
+</ul>
+</p>
+</div>
+<div class='card-body'>
+<h5 class='card-title'>Linked Processes</h5>
+<p class='card-text'>
+<ul>
+    {% for item in processes %}
+    <li> <a href='{% url 'ind' 'process' item.id %}'>{{item}}</a>   </li>
+    {% endfor %}
+</ul>
+</p>
+</div>
+<div class='card-body'>
+<h5 class='card-title'>Linked Risks</h5>
+<p class='card-text'>
+<ul>
+    {% for item in risks %}
+    <li> <a href='{% url 'ind' 'risk' item.id %}'>{{item}}</a>   </li>
+    {% endfor %}
+</ul>
+</p>
+</div>
+
+
 
 {% endblock %}

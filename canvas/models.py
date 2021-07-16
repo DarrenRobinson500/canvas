@@ -87,6 +87,8 @@ class Node(models.Model):
 class Connection(models.Model):
     a = models.ForeignKey(Db, blank = True, null = True, related_name = "Child", on_delete = models.CASCADE)
     b = models.ForeignKey(Db, blank = True, null = True, on_delete = models.CASCADE)
+    visible = models.BooleanField(null=True)
+
 
 class File(models.Model):
     TYPE_CHOICES = [("role","role" ), ("busobj","busobj" ), ("obligation","obligation" ), ("process","process"),

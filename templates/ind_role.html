@@ -1,14 +1,47 @@
 {% extends 'base.html'%}
 {% block content %}
+<h1>{{item}}</h1>
+<h2>Business Objectives</h2>
+<p>{{comment}}</p>
 
-<p id="Message">Description</p>
+<div class="row">
+    {% for item in busobjs %}
+      <div class="col-sm-3">
+          <div class="card-header" style="background-color: #AC97CC;"><h3 class="card-title">{{item}}</h3></div>
+          <div class="card-body" style="background-color: #D7CCE6;">
+              <h4>Processes and their Risks</h4>
+                  {% for process in item.links.all %}
+                    {% if process.type == "process" %}
+                      <p class="card-text"><b>Process: <a href='{% url 'ind' 'process' item.id %}'>{{process}}</a></b></p>
+                      {% for risk in process.links.all %}
+                        {% if risk.type == "risk" %}
+                          <p class="card-text">Risk: <a href='{% url 'ind' 'risk' item.id %}'>{{risk}}</a></p>
+                        {% endif %}
+                      {% endfor %}
+                    {% endif %}
+                  {% endfor%}
+          </div>
+          <div class="card-body" style="background-color: #D7CCE6;">
+              <h4>Risks associated with {{item}}</h4>
+                  {% for risk in item.links.all %}
+                    {% if risk.type == "risk" %}
+                      <p class="card-text"><b>a href='{% url 'ind' 'risk' risk.id %}'>{{risk}}</a></b></p>
+                    {% endif %}
+                  {% endfor%}
+          </div>
+      </div>
+    {% endfor %}
+</div>
+<br>
+<h3>Map</h3>
 <canvas id="canvas"></canvas>
+
 
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-canvas.width= window.innerWidth+250;
-canvas.height = 2000;
+canvas.width= window.innerWidth - 200;
+canvas.height = 500;
 canvas.style.background = "#F0F0F0";
 ctx.beginPath();
 ctx.rect(0, 0, canvas.width, canvas.height);
@@ -89,7 +122,6 @@ class Connection {
         ctx.stroke();}
 }
 
-
 canvas.addEventListener('click',(event) => {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -98,7 +130,6 @@ canvas.addEventListener('click',(event) => {
     for (let i = 0; i < nodes_js.length; i++) {
         nodes_js[i].clickNode(x,y);
     }
-
 });
 
 // create js nodes and connections
@@ -127,8 +158,6 @@ for (let i = 0; i < connections_js.length; i++) {
 for (let i = 0; i < nodes_js.length; i++) {
     nodes_js[i].draw(ctx);
 }
-
-
 
 </script>
 
