@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0008_node_parent'),
+        ("canvas", "0008_node_parent"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='node',
-            name='description',
-            field=models.TextField(blank=True, default='No description', null=True),
+            model_name="node",
+            name="description",
+            field=models.TextField(blank=True, default="No description", null=True),
         ),
     ]

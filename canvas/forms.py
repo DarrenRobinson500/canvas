@@ -4,12 +4,6 @@ from django.contrib.admin.sites import site
 from django.forms import ModelForm
 from .models import Db, File
 
-# class BusObjWidget(widgets.ForeignKeyRawIdWidget):
-#     def url_parameters(self):
-#         result = super().url_parameters()
-#         result['type__exact'] = "busobj"
-#         return result
-#
 class BusObjForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -21,32 +15,31 @@ class BusObjForm(ModelForm):
         labels = {'links': 'Add another business objective',}
         widgets = {'links': forms.SelectMultiple(attrs={'class':'form-control'})}
 
-
-# class BusObjForm(ModelForm):
-#     class Meta:
-#         model = Db
-#         fields = ('links',)
-#         labels = {'links': 'Add another business objective',}
-#         widgets = {'links': forms.SelectMultiple(attrs={'class':'form-control'})}
-
 class BaseForm(ModelForm):
+    links = forms.ModelMultipleChoiceField(
+        queryset=Db.objects.filter(type="busobj"),
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "form-control"}),
+    )
+
     class Meta:
         model = Db
-        fields = ('name', 'description', 'level', 'links')
+        fields = ("name", "description", "level", "links")
         widgets = {
-            'name': forms.TextInput(attrs={'class':'form-control'}),
-            'description': forms.Textarea(attrs={'class':'form-control','rows':3}),
-            'level': forms.Select(attrs={'class':'form-control'}),
-            'links': forms.SelectMultiple(attrs={'class':'form-control'}),
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "level": forms.Select(attrs={"class": "form-control"}),
         }
+
 
 class FileForm(ModelForm):
     class Meta:
         model = File
-        fields = ('name','type','document')
+        fields = ("name", "type", "document")
         widgets = {
-            'type': forms.Select(attrs={'class':'form-control'}),
-            'name': forms.TextInput(attrs={'class':'form-control','placeholder':''}),
-            'document': forms.FileInput(attrs={'class': 'form-control', 'placeholder': ''}),
+            "type": forms.Select(attrs={"class": "form-control"}),
+            "name": forms.TextInput(attrs={"class": "form-control", "placeholder": ""}),
+            "document": forms.FileInput(
+                attrs={"class": "form-control", "placeholder": ""}
+            ),
         }
-

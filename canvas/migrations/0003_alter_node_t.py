@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0002_node'),
+        ("canvas", "0002_node"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='node',
-            name='t',
+            model_name="node",
+            name="t",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0018_process_level'),
+        ("canvas", "0018_process_level"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='busobj',
-            name='level',
-            field=models.IntegerField(blank=True, choices=[(1, 1), (2, 2), (3, 3)], null=True),
+            model_name="busobj",
+            name="level",
+            field=models.IntegerField(
+                blank=True, choices=[(1, 1), (2, 2), (3, 3)], null=True
+            ),
         ),
     ]

@@ -7,42 +7,80 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0006_node_description'),
+        ("canvas", "0006_node_description"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='node',
-            old_name='t',
-            new_name='text',
+            model_name="node",
+            old_name="t",
+            new_name="text",
         ),
         migrations.AddField(
-            model_name='node',
-            name='level',
+            model_name="node",
+            name="level",
             field=models.IntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='node',
-            name='process',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='canvas.process'),
+            model_name="node",
+            name="process",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="canvas.process",
+            ),
         ),
         migrations.AddField(
-            model_name='node',
-            name='type',
-            field=models.CharField(blank=True, choices=[('Person', 'Person'), ('BusObj', 'BusObj'), ('Process', 'Process'), ('Control', 'Control'), ('Event', 'Event'), ('Action', 'Action')], max_length=255, null=True),
+            model_name="node",
+            name="type",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("Person", "Person"),
+                    ("BusObj", "BusObj"),
+                    ("Process", "Process"),
+                    ("Control", "Control"),
+                    ("Event", "Event"),
+                    ("Action", "Action"),
+                ],
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.CreateModel(
-            name='BusObj',
+            name="BusObj",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(blank=True, max_length=255, null=True)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='canvas.busobj')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(blank=True, max_length=255, null=True)),
+                ("description", models.TextField(blank=True, null=True)),
+                (
+                    "parent",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="canvas.busobj",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='node',
-            name='busobj',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='canvas.busobj'),
+            model_name="node",
+            name="busobj",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="canvas.busobj",
+            ),
         ),
     ]

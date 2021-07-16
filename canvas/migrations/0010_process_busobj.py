@@ -7,13 +7,18 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('canvas', '0009_alter_node_description'),
+        ("canvas", "0009_alter_node_description"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='process',
-            name='busobj',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='canvas.busobj'),
+            model_name="process",
+            name="busobj",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="canvas.busobj",
+            ),
         ),
     ]
