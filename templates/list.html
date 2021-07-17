@@ -1,28 +1,47 @@
 {% extends 'base.html'%}
 {% block content %}
 
-<a href="{% url 'new' type %}" class='btn btn-outline-secondary btn-sm'>New</a>
-
+{% if type != "all" and type != "control_inst" and type != "control_type" %}
+    <a href="{% url 'new' type %}" class='btn btn-outline-secondary btn-sm'>New</a>
+{% endif %}
 
 <h1>{{header}}</h1>
 <table class='table table-striped table-hover table-bordered'>
-    <tr style="background-color: #AC97CC;">
-        <th>Name</th>
-        <th>Description</th>
+    <tr style="background-color: #{{colour}};">
+        {% if type == "all" %} <th>Type</th> {% endif %}
+        <th>{% if type == "role" %} Role {% else %} Name {% endif %} </th>
+        {% if type != "role" %} <th>Owner</th> {% endif %}
+        <th>Business Objectives</th>
+        <th>Processes</th>
+        <th>Risks</th>
+        <th>Controls</th>
         <th>Level</th>
-        <th>Map</th>
-        <th>Update</th>
         <th>Delete</th>
     </tr>
 
     {% for item in list %}
     <tr>
-        <td> <a href='{% url 'ind' type item.id %}'> {{item.name }} </a></td>
-        <td> {{item.description }} </td>
-        <td> {{item.level }} ({{item.x}},{{item.y}})</td>
-        <td><a href='{% url 'map' type item.id %}' class='btn btn-outline-secondary btn-sm'> Map </a></td>
-        <td><a href='{% url 'update' type item.id %}' class='btn btn-outline-secondary btn-sm'> Update </a></td>
-        <td><a href='{% url 'delete' type item.id %}' class='btn btn-outline-secondary btn-sm'> Delete </a></td>
+        {% if type == "all" %}
+            <td> {{item.type_full}} </td>
+        {% endif %}
+
+        <td>
+            {{item.name }}<br>
+            <a href='{% url 'ind' item.type item.id %}'> View </a>
+            <a href='{% url 'update' item.type item.id %}'> Update </a>
+        </td>
+
+
+        {% if type != "role" %}
+            <td> {% if item.owner_id != "Error" %} <a href='{% url 'ind' 'role' item.owner_id %}'>{{item.owner}} {% else %}  {% endif %} <br>
+                <a href='{% url 'links' 'role' item.id %}'>Edit</a></td>
+        {% endif %}
+        <td> {{item.busobj }} <br><a href='{% url 'links' 'busobj' item.id %}' >Edit</a></td>
+        <td> {{item.process }} <br><a href='{% url 'links' 'process' item.id %}' >Edit</a></td>
+        <td> {{item.risk }} <br><a href='{% url 'links' 'risk' item.id %}' >Edit</a></td>
+        <td> {{item.control }} <br><a href='{% url 'links' 'control' item.id %}' >Edit</a></td>
+        <td> {{item.level }} </td>
+        <td><a href='{% url 'delete' item.type item.id %}' class='btn btn-outline-secondary btn-sm'> Delete </a></td>
     </tr>
     {% endfor %}
 </table>

@@ -1,6 +1,6 @@
 ####-----location_const--##########
 X_SPACE = 160
-Y_SPACE = 70
+Y_SPACE = 50
 current_y = 0
 
 
@@ -14,6 +14,7 @@ list_temp = "list.html"
 
 ###---------dict constant------------####
 full_name = {
+    "all": "Everything",
     "role": "Role",
     "busobj": "Business Objective",
     "obligation": "Obligation",
@@ -22,9 +23,13 @@ full_name = {
     "risk": "Risk",
     "metric": "Metric",
     "control": "Control",
+    "control_inst": "Control Instance",
+    "control_test": "Control Test",
     "issue": "Issue",
+    "action": "Action",
 }
 full_name_p = {
+    "all": "Everything",
     "role": "Roles",
     "busobj": "Business Objectives",
     "obligation": "Obligations",
@@ -33,18 +38,39 @@ full_name_p = {
     "risk": "Risks",
     "metric": "Metrics",
     "control": "Controls",
-    "issue": "Issues",
+    "control_inst": "Control Instances",
+    "control_test": "Control Tests",
+    "action": "Actions",
 }
 ind_template = {
-    "role": "ind",
+    "role": "ind_role",
     "busobj": "ind",
     "obligation": "ind",
     "theme": "ind",
     "process": "ind",
     "risk": "ind",
     "metric": "ind",
-    "control": "ind",
+    "control": "ind_control",
+    "control_inst": "ind",
+    "control_test": "ind",
     "issue": "ind",
+    "action": "ind",
+}
+
+template_colour = {
+    "all": ["AC97CC", "AC97CC"],
+    "role": ["AC97CC", "AC97CC"],
+    "busobj": ["8FAADC", "8FAADC"],
+    "obligation": ["8FAADC", "8FAADC"],
+    "theme": ["AC97CC", "AC97CC"],
+    "process": ["A9D18E", "E2EFD9"],
+    "risk": ["F19759", "F6BE98"],
+    "metric": ["AC97CC", "AC97CC"],
+    "control": ["AC97CC", "AC97CC"],
+    "control_inst": ["AC97CC", "AC97CC"],
+    "control_test": ["AC97CC", "AC97CC"],
+    "issue": ["AC97CC", "AC97CC"],
+    "action": ["AC97CC", "AC97CC"],
 }
 
 

@@ -1,62 +1,106 @@
 {% extends 'base.html'%}
 {% block content %}
 
-<div class='card'>
-    <div class='card-header'>
-    <b>{{item.name}} ({{item.type}})</b>
-</div>
-<div class='card-body'>
-<a href='{% url 'update' type item.id %}'>Edit</a>
-<h5 class='card-title'>Base Information</h5>
-<p class='card-text'>
-<ul>
-    <li> Name: {{ item.name }}  </li>
-    <li> Description: {{ item.description }}  </li>
-    <li> Parent: {{ item.parent.name }}  </li>
-</ul>
-</p>
-</div>
-<div class='card-body'>
-<h5 class='card-title'>Owners</h5>
-<p class='card-text'>
-<ul>
-    {% for item in owners %}
-    <li> <a href='{% url 'ind' 'role' item.id %}'>{{item}}</a>  </li>
-    {% endfor %}
-</ul>
-</p>
-</div>
-<div class='card-body'>
-<h5 class='card-title'>Linked Business Objectives</h5>
-<p class='card-text'>
-<ul>
-    {% for item in busobjs %}
-    <li> <a href='{% url 'ind' 'busobj' item.id %}'>{{item}}</a>   </li>
-    {% endfor %}
-</ul>
-</p>
-</div>
-<div class='card-body'>
-<h5 class='card-title'>Linked Processes</h5>
-<p class='card-text'>
-<ul>
-    {% for item in processes %}
-    <li> <a href='{% url 'ind' 'process' item.id %}'>{{item}}</a>   </li>
-    {% endfor %}
-</ul>
-</p>
-</div>
-<div class='card-body'>
-<h5 class='card-title'>Linked Risks</h5>
-<p class='card-text'>
-<ul>
-    {% for item in risks %}
-    <li> <a href='{% url 'ind' 'risk' item.id %}'>{{item}}</a>   </li>
-    {% endfor %}
-</ul>
-</p>
+<h1>{{item.name}} ({{item.type_full}})<br>
+    {% if type == "risk" %} Rating: {{item.risk_rating}} {% endif %}
+</h1>
+
+{% if type != "action" %}
+<a href='{% url 'new' 'action' item.id %}' class='btn btn-outline-secondary btn-sm'>Create Action</a><br><br>
+{% endif %}
+
+<div class="row">
+<div class="col-sm-6">
+
+    <div class='card'>
+        <div class='card-header'><b>Base Information</b>
+        </div>
+
+        <div class='card-body'>
+            <p class='card-title'><b>Base Information </b><a href='{% url 'update' type item.id %}'>Edit</a></p>
+            <p class='card-text'>
+            <ul>
+                <li> Name: {{ item.name }}  </li>
+                <li> Description: {{ item.description }}  </li>
+            </ul>
+            </p>
+        </div>
+
+        <div class='card-body'>
+        <p class='card-title'><b>Owner</b> <a href='{% url 'links' 'role' item.id %}' >Edit</a></p>
+        <p class='card-text'>
+        <ul>
+            {% for x in owners %}
+            <li> <a href='{% url 'ind' 'role' x.id %}'>{{x}}</a>  </li>
+            {% endfor %}
+            {% if owners.count == 0 %}
+            <li>No owner allocated</li>
+            {% endif %}
+        </ul>
+        </p>
+        </div>
+
+{% if type != "action" %}
+        <div class='card-body'>
+        <p class='card-title'><b>Actions</b></p>
+        <p class='card-text'>
+        <ul>
+            {% for action in item.links.all %}
+            {% if action.type == "action" %}
+              <li><a href='{% url 'ind' action.type action.id %}'>{{action}}</a> ({{action.owner}})<br></li>
+            {% endif %}
+            {% endfor%}
+        </ul>
+        </p>
+        </div>
+{% endif %}
+    </div>
 </div>
 
+<div class="col-sm-6">
+    <div class='card'>
+        <div class='card-header'>
+        <b>Links to other business objectives, processes and risks
+        </b>
+    </div>
+
+    <div class='card-body'>
+        <p class='card-title'><b>Linked Business Objectives</b> <a href='{% url 'links' 'busobj' item.id %}' >Edit</a></p>
+        <p class='card-text'>
+            <ul>
+                {% if busobjs.count == 0 %}<li>This item is not connected to a business objective</li>{% endif %}
+                {% for item in busobjs %}
+                <li> <a href='{% url 'ind' 'busobj' item.id %}'>{{item}}</a>   </li>
+                {% endfor %}
+            </ul>
+        </p>
+    </div>
+
+    <div class='card-body'>
+    <p class='card-title'><b>Linked Processes</b> <a href='{% url 'links' 'process' item.id %}' >Edit</a></p>
+    <p class='card-text'>
+    <ul>
+        {% if processes.count == 0 %}<li>This item is not connected to a process</li>{% endif %}
+        {% for item in processes %}
+        <li> <a href='{% url 'ind' 'process' item.id %}'>{{item}}</a>   </li>
+        {% endfor %}
+    </ul>
+    </p>
+    </div>
+
+    <div class='card-body'>
+    <p class='card-title'><b>Linked Risks</b> <a href='{% url 'links' 'risk' item.id %}' >Edit</a></p>
+    <p class='card-text'>
+    <ul>
+        {% if risks.count == 0 %}<li>This item is not connected to a risk</li>{% endif %}
+        {% for item in risks %}
+        <li> <a href='{% url 'ind' 'risk' item.id %}'>{{item}}</a>   </li>
+        {% endfor %}
+    </ul>
+    </p>
+    </div>
+</div>
+</div>
 
 
 {% endblock %}

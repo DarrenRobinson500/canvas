@@ -4,47 +4,101 @@
 <h2>Business Objectives</h2>
 <p>{{comment}}</p>
 
+<h1>{{header}}</h1>
 <div class="row">
-    {% for item in busobjs %}
-      <div class="col-sm-3">
-          <div class="card-header" style="background-color: #AC97CC;"><h3 class="card-title">{{item}}</h3></div>
-          <div class="card-body" style="background-color: #D7CCE6;">
-              <h4>Processes and their Risks</h4>
-                  {% for process in item.links.all %}
-                    {% if process.type == "process" %}
-                      <p class="card-text"><b>Process: <a href='{% url 'ind' 'process' item.id %}'>{{process}}</a></b></p>
-                      {% for risk in process.links.all %}
-                        {% if risk.type == "risk" %}
-                          <p class="card-text">Risk: <a href='{% url 'ind' 'risk' item.id %}'>{{risk}}</a></p>
-                        {% endif %}
-                      {% endfor %}
-                    {% endif %}
-                  {% endfor%}
-          </div>
-          <div class="card-body" style="background-color: #D7CCE6;">
-              <h4>Risks associated with {{item}}</h4>
-                  {% for risk in item.links.all %}
-                    {% if risk.type == "risk" %}
-                      <p class="card-text"><b>a href='{% url 'ind' 'risk' risk.id %}'>{{risk}}</a></b></p>
-                    {% endif %}
-                  {% endfor%}
-          </div>
-      </div>
+<div class="col-sm-9">
+<table class='table table-striped table-hover table-bordered'>
+    <tr style="background-color: #{{colour}};">
+        <th>Business Objectives</th>
+        <th>Processes</th>
+        <th>Risks</th>
+    </tr>
+    {% for busobj in busobjs %}
+    <tr>
+        <td>
+            <a href='{% url 'ind' busobj.type busobj.id %}'>{{busobj}}</a> (Level {{ busobj.level }}) </td>
+        <td>
+            <br>
+            {% for process in busobj.links.all %}
+            {% if process.type == "process" %}
+              <a href='{% url 'ind' process.type process.id %}'>{{process}}</a><br>
+            {% endif %}
+            {% endfor%}
+        </td>
+        <td>
+            {{ busobj.risk }}
+            {% for process in busobj.links.all %}
+            {% if process.type == "process" %}
+              {{process.risk}}</a><br>
+            {% endif %}
+            {% endfor%}
+        </td>
+    </tr>
     {% endfor %}
+</table>
 </div>
-<br>
-<div class="card-body" style="background-color: #D7CCE6;">
-<form action='' method = POST>
-  {% csrf_token %}
-  {{busobj_form.as_p}} <br>
-  <input type = 'submit' value = 'Update' class='btn btn-secondary'>
-</form>
+
+<div class="col-sm-3">
+<div class="card-header" style="background-color: #8FAADC;"><h3 class="card-title">Add Business Objective</h3></div>
+<div class="card-body" style="background-color: #CDD9EF;">
+    <form action='' method = POST>
+      {% csrf_token %}
+      {{form.as_p}} <br>
+      <input type = 'submit' value = 'Update' class='btn btn-secondary'>
+    </form>
+</div>
+</div>
 </div>
 <br>
 
-<h3>Map</h3>
-<canvas id="canvas"></canvas>
+<h3>Schedule - Actions</h3>
+<table class='table table-striped table-hover table-bordered'>
+    <tr style="background-color: #8FAADC;">
+        <th>Item</th>
+        <th>Due Date</th>
+    </tr>
+    {% for x in actions %}
+    <tr>
+        <td> <a href='{% url 'ind' x.type x.id %}'>{{x}}</a></td>
+        <td>{{x.date_due}}</td>
+    </tr>
+    {% endfor %}
+</table>
 
+
+<h3>Schedule - Controls</h3>
+<table class='table table-striped table-hover table-bordered'>
+    <tr style="background-color: #8FAADC;">
+        <th>Item</th>
+        <th>Due Date</th>
+    </tr>
+    {% for x in controls %}
+    <tr>
+        <td>{{x}}</td>
+        <td>{{x.next_due_inst}}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>Schedule - Controls Testing</h3>
+<table class='table table-striped table-hover table-bordered'>
+    <tr style="background-color: #8FAADC;">
+        <th>Item</th>
+        <th>Due Date</th>
+    </tr>
+    {% for x in controls %}
+    <tr>
+        <td>{{x}}</td>
+        <td>{{x.next_due_test}}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+
+
+<h3><a href='{% url 'ind' item.type item.id 'True' %}'> Map </a></h3>
+
+    <canvas id="canvas"></canvas>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -58,10 +112,7 @@ ctx.strokeStyle = "#C8C8C8"
 ctx.stroke();
 
 function handle_submit_click() {
-    console.log("Button pressed");
     const description = document.getElementById("description").value;
-    console.log(description);
-
     }
 
 class Node{
@@ -78,7 +129,7 @@ class Node{
         this.highlight = highlight;
         this.highlight_b = highlight_b;
         this.visible = visible;
-        console.log(this.text, this.x, this.y);
+
     }
     draw(ctx){
         ctx.beginPath();
@@ -125,7 +176,7 @@ class Connection {
         ctx.beginPath();
         ctx.moveTo(this.parent.x+this.parent.w/2,this.parent.y);
         ctx.lineTo(this.child.x+this.child.w/2,this.child.y);
-        if (this.visible) {ctx.strokeStyle = this.c;} else {ctx.strokeStyle = "white";}
+        if (this.visible) {ctx.strokeStyle = this.parent.c;} else {ctx.strokeStyle = "white";}
         ctx.fill();
         ctx.closePath();
         ctx.stroke();}
@@ -147,7 +198,6 @@ const nodes_js = []
     var colour = "{{node.colour}}"
     var node = new Node({{node.x}},{{node.y}},120,30, "{{node.name}}", "{{node.description}}", colour, "white", false, false,
         {% if node.visible %} true {% else %} false {% endif%})
-    console.log("{{node.name}}")
     nodes_js.push(node);
 {% endfor %}
 
@@ -157,7 +207,7 @@ const connections_js = []
         if (nodes_js[i].text == "{{connection.a}}") {child = nodes_js[i];}
         if (nodes_js[i].text == "{{connection.b}}") {parent = nodes_js[i];}
     }
-    var connection = new Connection(child, parent, false);
+    var connection = new Connection(child, parent, true, {% if connection.visible %} true {% else %} false {% endif%});
     connections_js.push(connection);
 {% endfor %}
 

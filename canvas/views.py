@@ -1,51 +1,22 @@
 from django.shortcuts import render, redirect
 from .models import Db, Connection, File
-from .forms import BaseForm, FileForm, BusObjForm
+from .forms import BaseForm, FileForm, RiskForm, ControlForm, ControlInstForm, ControlTestForm, ActionForm, \
+    OwnerLink, BusObjLink, ProcessLink, RiskLink, ControlLink, MetricLink, IssueLink
 import openpyxl as xl
-from .constants import (
-    X_SPACE,
-    new_temp,
-    list_temp,
-    upload_temp,
-    Y_SPACE,
-    home_temp,
-    home_link,
-    home_comment,
-    home_header,
-    current_y,
-    full_name,
-    full_name_p,
-    ind_template,
-    canvas_temp,
-)
+from .constants import (X_SPACE, new_temp, list_temp, upload_temp, Y_SPACE, home_temp, home_link,
+    home_comment, home_header, current_y, full_name, full_name_p, ind_template, canvas_temp, template_colour)
 
 X_SPACE = 160
-Y_SPACE = 70
 current_y = 0
 
-full_name = {"role": "Role", "busobj": "Business Objective", "obligation": "Obligation", "theme": "Theme",
-             "process": "Process", "risk": "Risk", "metric": "Metric", "control": "Control", "issue": "Issue", }
-full_name_p = {"role": "Roles", "busobj": "Business Objectives", "obligation": "Obligations", "theme": "Themes",
-             "process": "Processes", "risk": "Risks", "metric": "Metrics", "control": "Controls", "issue": "Issues", }
-ind_template = {"role": "ind_role", "busobj": "ind", "obligation": "ind", "theme": "ind",
-             "process": "ind", "risk": "ind", "metric": "ind", "control": "ind", "issue": "ind", }
-
 def home(request):
-    header = home_header
-    comment = home_comment
-    link = home_link
-    link_desc = "Description"
-    return render(
-        request,
-        home_temp,
-        {"header": header, "comment": comment, "link": link, "link_desc": link_desc},
-    )
+    return redirect("/list/role")
 
 
 def set_loc_layer(type):
     global current_y
     for level in range(1, 7):
-        this_row = Db.objects.filter(type=type, level=level)
+        this_row = Db.objects.filter(type=type, level=level, visible=True)
         if this_row.count() > 0:
             current_x = int(
                 20 + X_SPACE * 3 - (min(this_row.count(), 7) - 1) / 2 * X_SPACE
@@ -53,6 +24,8 @@ def set_loc_layer(type):
             for item in this_row:
                 item.y = current_y
                 item.x = current_x
+                print(type,level, this_row, item, item.y, item.x)
+
                 item.save()
                 current_x += X_SPACE
                 if current_x >= X_SPACE * 7:
@@ -76,110 +49,184 @@ def set_locations():
     set_loc_layer("issue")
 
 
-def map(request, type, id):
-    Connection.objects.all().delete()
-    db = Db.objects.all()
-    db.update(visible=False)
-    first = Db.objects.get(id=id)
-    first.visible = True
-    first.save()
-    for item in db:
-        for item2 in item.links.all():
-            if item.level <= item2.level:
-                new = Connection(a=item, b=item2)
-                if item.visible:
-                    print(item, item2)
-                    item2.visible = True
-                    item2.save()
-                    new.visible = True
-                new.save()
-    connections = Connection.objects.all()
-    set_locations()
+def add_connections(parent, children):
+    for child in children:
+        new = Connection(a=child, b=parent, visible=True)
+        new.save()
 
-    return render(request, canvas_temp, {"nodes": db, "connections": connections})
-
-
-def ind(request, type, id):
-    messages=[]
-    template = ind_template[type] + ".html"
+def ind(request, type, id, map = False):
     item = Db.objects.get(pk=id)
+    Connection.objects.all().delete()
+
+    messages=[]
+    nodes = []
+    connections = []
+
+    template = ind_template[type] + ".html"
     objects = item.links.all()
     owners = objects.filter(type="role")
     busobjs = objects.filter(type="busobj")
+    obligations = objects.filter(type="obligation")
+    themes = objects.filter(type="theme")
     processes = objects.filter(type="process")
     risks = objects.filter(type="risks")
+    controls = objects.filter(type="control")
+    controls_insts = objects.filter(type="control_inst")
+    controls_tests = objects.filter(type="control_test")
+    metrics = objects.filter(type="metric")
+    issues = objects.filter(type="issue")
+    actions = objects.filter(type="action")
 
-    busobj_form = BusObjForm(request.POST or None, instance=item)
+    form = BusObjLink(request.POST or None, instance=item)
 
     if type == "role":
-        for x in busobjs:
-            processes = processes | x.links.all().filter(type="process")
-            risks = risks | x.links.all().filter(type="risk")
-            x.visible = True
-            x.save()
-        for x in processes:
-            risks = risks | x.links.all().filter(type="risk")
-            print(x, x.links.filter(type="risk"))
+        if form.is_valid():
+            to_remove = item.links.all().filter(type="busobj")
+            for i in to_remove:
+                item.links.remove(i)
+            data = form.cleaned_data.get("links")
+            for x in data:
+                item.links.add(x)
 
-        if busobj_form.is_valid():
-            busobj_form.save()
-        first = Db.objects.get(id=id)
+    if type == "role" and map:
+        db = Db.objects.all()
+        db.update(visible=False)
+        for x in busobjs:
+            new = x.links.all().filter(type="busob")
+            busobjs = busobjs | new
+            add_connections(x,new)
+            new = x.links.all().filter(type="process")
+            processes = processes | new
+            add_connections(x,new)
+            new = x.links.all().filter(type="risk")
+            risks = risks | new
+            add_connections(x,new)
+        for x in processes:
+            processes = processes | x.links.all().filter(type="process")
+            add_connections(x, processes)
+            risks = risks | x.links.all().filter(type="risk")
+            add_connections(x, risks)
+        for x in risks:
+            new = x.links.all().filter(type="risk")
+            risks = risks | new
+            add_connections(x, new)
+            new = x.links.all().filter(type="control")
+            controls = controls | new
+            add_connections(x, new)
+
+        busobjs = busobjs.distinct()
+        obligations = obligations.distinct()
+        themes = themes.distinct()
+        processes = processes.distinct()
+        risks = risks.distinct()
+        metrics = metrics.distinct()
+        controls = controls.distinct()
+        issues = issues.distinct()
+
+        nodes = busobjs | obligations | themes | processes | risks | controls | metrics | issues
+
+        for node in nodes:
+            node.visible = True
+            node.save()
+        connections = Connection.objects.all()
+        set_locations()
+        nodes = busobjs | obligations | themes | processes | risks | controls | metrics | issues
+
         if busobjs.count() == 0:
             messages.append("You currently have no business objectives. Consider adding some.")
         for busobj in busobjs:
             item_processes = busobj.links.all().filter(type="process").count()
             if item_processes == 0: messages.append(f"Your business objective '{busobj}' has no processes. Consider adding some.")
 
-        db = Db.objects.all()
-        db.update(visible=False)
-        first.x = 50
-        first.y = 50
-        first.save()
-
-    processes = processes.distinct()
-
-    return render(request, template, {'item': item, 'type': type, 'owners': owners,'busobj_form':busobj_form,
-                                      'busobjs':busobjs, 'nodes': busobjs, 'processes':processes,'risks':risks,
-                                      'messages':messages})
+    return render(request, template, {'item': item, 'type': type, 'owners': owners,'form':form,
+                                      'busobjs':busobjs, 'nodes': nodes, 'connections': connections, 'processes':processes,'risks':risks,
+                                      'controls': controls, 'control_insts': controls_insts, 'control_tests': controls_tests,
+                                      'actions': actions, 'messages':messages})
 
 def update(request, type, id):
     item = Db.objects.get(pk=id)
     form = BaseForm(request.POST or None, instance=item)
-    # if type == "risk":
-    #     form = RiskForm(request.POST or None, instance=item)
+    if type == "risk": form = RiskForm(request.POST or None, instance=item)
+    if type == "control": form = ControlForm(request.POST or None, instance=item)
+    if type == "control_inst": form = ControlInstForm(request.POST or None, instance=item)
+    if type == "control_test": form = ControlTestForm(request.POST or None, instance=item)
+
     if form.is_valid():
         form.save()
         return redirect('/list/' + type)
     header = full_name[type] + ": " + item.name
-    processes = item.links.all().filter(type="process")
     return render(request, 'update.html', {'header': header,'item': item, 'form': form, 'type': type})
+
+def links(request, type, id):
+    item = Db.objects.get(pk=id)
+    header = full_name[item.type] + ": " + item.name
+    type_name = "Select related " + full_name_p[type] + ":"
+    if type == "role":
+        type_name = "Owner:"
+
+    if type == "role": form = OwnerLink(request.POST or None, instance=item)
+    if type == "busobj": form = BusObjLink(request.POST or None, instance=item)
+    if type == "process": form = ProcessLink(request.POST or None, instance=item)
+    if type == "risk": form = RiskLink(request.POST or None, instance=item)
+    if type == "control": form = ControlLink(request.POST or None, instance=item)
+    if type == "metric": form = MetricLink(request.POST or None, instance=item)
+    if type == "metric": form = IssueLink(request.POST or None, instance=item)
+
+    if form.is_valid():
+        to_remove = item.links.all().filter(type=type)
+        for i in to_remove:
+            item.links.remove(i)
+        data = form.cleaned_data.get("links")
+        for x in data:
+            item.links.add(x)
+        return redirect('/list/' + item.type)
+
+    return render(request, 'links.html', {'header': header,'item': item, 'form': form, 'type_name': type_name})
 
 def list(request, type):
     header = full_name_p[type]
     new_link = type + "_new"
-    list = Db.objects.filter(type=type)
+    list = Db.objects.all().order_by("level").order_by("type")
+    colour = template_colour[type][0]
+    if type != "all":
+        list = list.filter(type=type).order_by("level")
     return render(
-        request,
-        list_temp,
-        {"header": header, "type": type, "new_link": new_link, "list": list},
-    )
+        request, list_temp,
+        {"header": header, "type": type, "new_link": new_link, "list": list, "colour": colour})
 
+def new(request, type, id = None):
+    if id is None:
+        header = "New " + full_name[type]
+    else:
+        item = Db.objects.filter(id=id)[0]
+        header = item.name + ": New " + full_name[type]
+    form = BaseForm(request.POST)
+    if type == "risk":         form = RiskForm(request.POST)
+    if type == "control":      form = ControlForm(request.POST)
+    if type == "control_inst": form = ControlInstForm(request.POST)
+    if type == "control_test": form = ControlTestForm(request.POST)
+    if type == "action":       form = ActionForm(request.POST)
 
-def new(request, type):
-    header = "New " + full_name[type]
     if request.method == "POST":
-        form = BaseForm(request.POST)
-        # if type == "risk":
-        #     form = RiskForm(request.POST)
         if form.is_valid():
             new = form.save()
             new.type = type
+            if id is not None:
+                item.links.add(new)
+            if new.type == "control_inst":
+                new.name = "Control run"
+                if new.date_performed is not None:
+                    new.name = "Control run: " + str(new.date_performed)
+            if new.type == "control_test":
+                new.name = "Control test"
+                if new.date_performed is not None:
+                    new.name = "Control test: " + str(new.date_performed)
             form.save()
-            return redirect("/list/" + type)
-    else:
-        form = BaseForm()
-        # if type == "risk":
-        #     form = RiskForm()
+            if id is not None:
+                path = "/ind/" + item.type + "/" + str(item.id)
+                return redirect(path)
+            else:
+                return redirect("/list/" + type)
     return render(request, new_temp, {"header": header, "form": form})
 
 def delete(request, type, id):

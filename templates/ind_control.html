@@ -1,0 +1,61 @@
+{% extends 'base.html'%}
+{% block content %}
+
+<h1>{{item}} ({{item.type_full}})</h1>
+<h4>Owner: {{item.owner}}</h4>
+<a href='{% url 'update' item.type item.id %}' class='btn btn-outline-secondary btn-sm'>Edit</a>
+
+<p>Next due date (to perform): <b>{{ item.next_due_inst }}</b> ({{item.frequency_inst}})<br>
+   Next due date (to test): <b>{{ item.next_due_test }}</b> ({{item.frequency_test}})</p>
+
+<a href='{% url 'new' 'control_inst' item.id %}' class='btn btn-outline-secondary btn-sm'>Run Control</a>
+<a href='{% url 'new' 'control_test' item.id %}' class='btn btn-outline-secondary btn-sm'>Test Control</a>
+
+<h3>Instances of the Control being Performed</h3>
+<table class='table table-striped table-hover table-bordered'>
+    <tr style="background-color: #{{item.colour}};">
+        <th>Date run</th>
+        <th>Notes</th>
+        <th>Outcome</th>
+        <th>Actions</th>
+    </tr>
+
+    {% for x in control_insts %}
+    <tr>
+        <td>{{x.date_performed}}</td>
+        <td>{{x.description}}</td>
+        <td>{{x.outcome}}</td>
+        <td>
+            <a href='{% url 'ind' 'control_inst' x.id %}' class='btn btn-outline-secondary btn-sm'>View</a>
+            <a href='{% url 'update' 'control_inst' x.id %}' class='btn btn-outline-secondary btn-sm'>Edit</a>
+            <a href='{% url 'delete' 'control_inst' x.id %}' class='btn btn-outline-secondary btn-sm'>Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>Instances of the Control being Tested</h3>
+<table class='table table-striped table-hover table-bordered'>
+    <tr style="background-color: #{{item.colour}};">
+        <th>Date run</th>
+        <th>Notes</th>
+        <th>Outcome</th>
+        <th>Actions</th>
+    </tr>
+
+    {% for x in control_tests %}
+    <tr>
+        <td>{{x.date_performed}}</td>
+        <td>{{x.description}}</td>
+        <td>{{x.outcome}}</td>
+        <td>
+            <a href='{% url 'ind' 'control_test' x.id %}' class='btn btn-outline-secondary btn-sm'>View</a>
+            <a href='{% url 'update' 'control_test' x.id %}' class='btn btn-outline-secondary btn-sm'>Edit</a>
+            <a href='{% url 'delete' 'control_test' x.id %}' class='btn btn-outline-secondary btn-sm'>Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br><br>
+{% endblock %}
